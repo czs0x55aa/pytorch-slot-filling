@@ -1,2 +1,2 @@
 # pytorch-slot-filling
-Slot Filling with Pytorch.
+Work in progress.
