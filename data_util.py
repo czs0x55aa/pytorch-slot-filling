@@ -2,11 +2,13 @@
 import gzip
 import pickle
 import numpy as np
+import torch
 import torch.utils.data as Data
+from torch.autograd import Variable
 
 data_path = './data/atis.fold1.pkl.gz'
 
-def load_data():
+def load_data(batch_size=1):
     f = gzip.open(data_path, 'rb')
 
     train_set, valid_set, test_set, dicts = pickle.load(f)
@@ -16,14 +18,46 @@ def load_data():
 
     train_x, _, train_label = train_set
     val_x, _, val_label = valid_set
+
     # Create index to word/label dicts
     w2idx, labels2idx = dicts['words2idx'], dicts['labels2idx']
     idx2w = {w2idx[k]: k for k in w2idx}
     idx2labels = {labels2idx[k]: k for k in labels2idx}
 
-    n_vocab = len(idx2w)
-    n_classes = len(idx2labels)
+    training = DataSet(train_x, train_label, idx2w, idx2labels, batch_size=batch_size)
+    return training
+
+class DataSet(object):
+    def __init__(self, src, target, idx2w, idx2labels, batch_size=1, shuffle=False):
+        # assert np.shpae(data)[0] == np.shape(target)[0]
+        self.data = zip(src, target)
+        if shuffle is True:
+            pass
+        # cannot support batch
+        self.batch_size = batch_size
+        self.length = np.shape(src)[0]
+
+        self.idx2w = idx2w
+        self.idx2labels = idx2labels
+        self.vocab_size = len(idx2w)
+        self.n_classes = len(idx2labels)
+
+    def __getitem__(self, index):
+        assert index < self.length
+        pairs = self.data[index]
+
+        def wrap(pairs):
+            # pairs.sort(key=lambda x: len(x[0]), reverse=True)
+            # data_x, data_y = zip(*pairs)
+            data_x, data_y = pairs
+            x_variable = Variable(torch.from_numpy(data_x).long())
+            y_variable = Variable(torch.from_numpy(data_y))
+            return x_variable, y_variable
+        return wrap(pairs)
+
+    def __len__(self):
+        return self.length
 
 
 if __name__ == '__main__':
-    load_data()
+    load_data(1)
