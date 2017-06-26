@@ -43,7 +43,7 @@ class DataSet(object):
         self.n_classes = len(idx2labels)
 
     def __getitem__(self, index):
-        assert index < self.length
+        # assert index < self.length
         pairs = self.data[index]
 
         def wrap(pairs):
@@ -51,7 +51,7 @@ class DataSet(object):
             # data_x, data_y = zip(*pairs)
             data_x, data_y = pairs
             x_variable = Variable(torch.from_numpy(data_x).long())
-            y_variable = Variable(torch.from_numpy(data_y))
+            y_variable = Variable(torch.from_numpy(data_y).long())
             return x_variable, y_variable
         return wrap(pairs)
 
