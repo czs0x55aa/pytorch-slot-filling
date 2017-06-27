@@ -15,19 +15,18 @@ class SlotRNN(nn.Module):
         self.batch_size = 1
 
         self.embedding = nn.Embedding(vocab_size, hidden_size)
-        self.rnn = nn.RNN(hidden_size, hidden_size, batch_first=True)
+        self.dropout = nn.Dropout(p=0.25)
+        self.rnn = nn.GRU(hidden_size, hidden_size, batch_first=True)
         self.linear = nn.Linear(hidden_size, n_classes)
 
     def forward(self, input):
         input_embedded = self.embedding(input.view(self.batch_size, -1))
         # input embedded size (batch_size, seq_len, input_size)
-        rnn_out, rnn_hidden = self.rnn(input_embedded, self.initHidden())
+        rnn_out, rnn_hidden = self.rnn(self.dropout(input_embedded), self.initHidden())
         affine_out = self.linear(rnn_out.view(-1, self.hidden_size))
         return F.log_softmax(affine_out)
 
     def initHidden(self):
         #  (num_layers, batch, hidden_size)
         init_hidden = Variable(torch.zeros(1, self.batch_size, self.hidden_size))
-        # if USE_CUDA:
-        #     init_hidden = init_hidden.cuda()
         return init_hidden
