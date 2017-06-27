@@ -31,5 +31,6 @@ def get_metrics(filename):
     if os.path.exists(filename):
         cmd = './conlleval.pl < %s | grep accuracy' % filename
         out = os.popen(cmd).read().split()
+        os.system('rm %s' % filename)
         return {'Precision': float(out[3][:-2]), 'Recall': float(out[5][:-2]), 'F1': float(out[7])}
     return None
