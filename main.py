@@ -8,8 +8,11 @@ from model import SlotRNN
 from evaluate import conlleval
 
 embedding_size = 100
-n_epochs = 10
+n_epochs = 20
 learning_rate = 0.01
+
+def var2np(variable):
+    return torch.max(variable, 1)[1].data.squeeze(1).numpy()
 
 def train():
     train_dataset, val_dataset = load_data()
@@ -18,9 +21,6 @@ def train():
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     criterion = nn.NLLLoss()
     print (model)
-
-    def var2np(variable):
-        return torch.max(variable, 1)[1].data.squeeze(1).numpy()
 
     for epoch in range(n_epochs):
         # get batch data
@@ -39,11 +39,21 @@ def train():
             loss.backward()
             optimizer.step()
 
+        # print ('epoch: (%d / %d) loss: %.4f' % (epoch+1, n_epochs, print_loss/len(train_dataset)))
         train_pred = [list(map(lambda x: train_dataset.idx2labels[x], y)) for y in train_pred_label]
-        print conlleval(train_pred, train_dataset.groundtruth, train_dataset.words, 'r.txt')
-        print ('epoch: (%d / %d) loss: %.4f' % (epoch+1, n_epochs, print_loss/len(train_dataset)))
+        eval(model, train_dataset, train_pred)
+        eval(model, val_dataset)
 
-
+def eval(model, dataset, pred_res=None):
+    model.eval()
+    if pred_res is None:
+        pred_label = []
+        for data_x, data_y in dataset:
+            pred = model(data_x)
+            pred_label.append(var2np(pred))
+        pred_res = [list(map(lambda x: dataset.idx2labels[x], y)) for y in pred_label]
+    print conlleval(pred_res, dataset.groundtruth, dataset.words, 'tmp.txt')
+    model.train()
 
 if __name__ == '__main__':
     train()
