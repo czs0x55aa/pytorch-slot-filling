@@ -62,7 +62,3 @@ class DataSet(object):
 
     def __len__(self):
         return self.length
-
-
-if __name__ == '__main__':
-    load_data()
